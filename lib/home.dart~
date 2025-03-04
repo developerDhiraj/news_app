@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:news_app/NewsView.dart';
 import 'package:news_app/category.dart';
 import 'package:news_app/model.dart';
 import 'package:http/http.dart';
@@ -18,25 +19,33 @@ class _HomeState extends State<Home> {
   TextEditingController searchController = new TextEditingController();
   List<NewsQueryModel> newsModelList = [];
   List<NewsQueryModel> newsModelListCarousel = [];
-  List<String> navBarItem = ["Business","Entertainment","General","Health","Science","Sports","Technology"];
+  List<String> navBarItem = ["Bihar","India","Business","Entertainment","General","Health","Science","Sports","Technology"];
 
 
   bool isLoading = true;
   getNewsByQuery(String query) async {
     try {
+      Map element;
+      int i = 0;
       String url = "https://newsapi.org/v2/everything?q=$query&apiKey=4ba4bd0d13f9451f90d81de258e609ef";
       Response response = await get(Uri.parse(url));
       Map data = jsonDecode(response.body);
-      log(data.toString());
+      // log(data.toString());
       setState(() {
-        data["articles"].forEach((element) {
+        for (element in data["articles"]){
+          try{
+          i++;
           NewsQueryModel newsQueryModel = new NewsQueryModel();
           newsQueryModel = NewsQueryModel.fromMap(element);
           newsModelList.add(newsQueryModel);
           setState(() {
             isLoading = false;
           });
-        });
+          if (i == 5){
+            break;
+          }
+          }catch(e){print(e);}
+        };
       });
     }catch(e){
       log("Error: $e");
@@ -45,19 +54,26 @@ class _HomeState extends State<Home> {
 
   getNewsUs() async {
     try {
+      Map element;
+      int i = 0;
       String url = "https://newsapi.org/v2/top-headlines?country=us&apiKey=4ba4bd0d13f9451f90d81de258e609ef";
       Response response = await get(Uri.parse(url));
       Map data = jsonDecode(response.body);
-      log(data.toString());
+      // log(data.toString());
       setState(() {
-        data["articles"].forEach((element) {
+        for (element in data["articles"]) {
+          try{
           NewsQueryModel newsQueryModel = new NewsQueryModel();
           newsQueryModel = NewsQueryModel.fromMap(element);
           newsModelListCarousel.add(newsQueryModel);
           setState(() {
             isLoading = false;
           });
-        });
+          if (i == 5){
+            break;
+          }
+          }catch(e){print(e);}
+        };
       });
     }catch(e){
       log("Error: $e");
@@ -91,7 +107,7 @@ class _HomeState extends State<Home> {
                 children: [
                   GestureDetector(
                     onTap: (){
-                      // Navigator.push(context, MaterialPageRoute(builder: (context) => Search(searchController.text)));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => Category(Query: searchController.text)));
                     },
                     child: Container(
                       child: Icon(Icons.search,color: Colors.blueAccent,),
@@ -102,7 +118,11 @@ class _HomeState extends State<Home> {
                     controller: searchController,
                     textInputAction: TextInputAction.search,
                     onSubmitted: (value){
-                      print(value);
+                      if (value == ""){
+                        print("Blank Search");
+                      }else{
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => Category(Query: value)));
+                      }
                     },
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -121,7 +141,7 @@ class _HomeState extends State<Home> {
                   itemBuilder: (context, index){
                     return InkWell(
                       onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => Category(Query: Query)))
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => Category(Query: navBarItem[index])));
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 20,vertical: 10),
@@ -140,43 +160,50 @@ class _HomeState extends State<Home> {
                 items: newsModelListCarousel.map((instance) {
                   return Builder(
                     builder: (BuildContext context) {
+                      try{
                       return Container(
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)
-                          ),
-                          child: Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(instance.newsImg, fit: BoxFit.fitHeight,width: double.infinity,),
-                              ),
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.only(bottomRight: Radius.circular(10),bottomLeft: Radius.circular(10) ),
-                                    gradient: LinearGradient(
-                                        colors: [
-                                          Colors.black12.withValues(alpha: 0.2),
-                                          Colors.black],
-                                      begin: Alignment.topCenter,end: Alignment.bottomCenter)
-                                  ),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 5,
-                                      vertical: 10
-                                    ),
-                                    child: Text(instance.newsHead, style: TextStyle(color: Colors.white),),
-                                  ),
-                                  ),
+                        child: InkWell(
+                          onTap: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=>Newsview(instance.newsUrl)));
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)
+                            ),
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(instance.newsImg, fit: BoxFit.fitHeight,width: double.infinity,),
                                 ),
-                            ],
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.only(bottomRight: Radius.circular(10),bottomLeft: Radius.circular(10) ),
+                                      gradient: LinearGradient(
+                                          colors: [
+                                            Colors.black12.withValues(alpha: 0.2),
+                                            Colors.black],
+                                        begin: Alignment.topCenter,end: Alignment.bottomCenter)
+                                    ),
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 10
+                                      ),
+                                      child: Text(instance.newsHead, style: TextStyle(color: Colors.white),),
+                                    ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       );
+                      }catch(e){print(e); return Container();}
                     },
                   );
                 }).toList(),
@@ -193,60 +220,82 @@ class _HomeState extends State<Home> {
                   shrinkWrap: true,
                   itemCount: newsModelList.length,
                   itemBuilder: (context, index){
-                return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 10,vertical: 5),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15)
-                    ),
-                    elevation: 1,
-                    child: Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: Image.network(newsModelList[index].newsImg, fit: BoxFit.fitHeight,width: double.infinity, height: 200,),
-                        ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(15),bottomRight:Radius.circular(15) ),
-                              gradient: LinearGradient(
-                                  colors: [
-                                    Colors.black12.withValues(alpha: 0.2),
-                                    Colors.black],
-                                  begin: Alignment.topCenter, end: Alignment.bottomCenter
-                              )
-                            ),
-                            padding: EdgeInsets.fromLTRB(15, 15, 10, 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(newsModelList[index].newsHead.length>30 ? "${newsModelList[index].newsHead.substring(0,35)}..." : newsModelList[index].newsHead,
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold
-                                  ),
-                                ),
-                                Text(newsModelList[index].newsDes.length >35 ? "${newsModelList[index].newsDes.substring(0,42)}..." : newsModelList[index].newsDes, style: TextStyle(color: Colors.white),),
-                              ],
+                  try{
+                return InkWell(
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>Newsview()))
+                  },
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 10,vertical: 5),
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)
+                      ),
+                      elevation: 1,
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: Image.network(newsModelList[index].newsImg, fit: BoxFit.fitHeight,width: double.infinity, height: 200,
+                  
                             ),
                           ),
-                        )
-                      ],
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(15),bottomRight:Radius.circular(15) ),
+                                gradient: LinearGradient(
+                                    colors: [
+                                      Colors.black12.withValues(alpha: 0.2),
+                                      Colors.black],
+                                    begin: Alignment.topCenter, end: Alignment.bottomCenter
+                                )
+                              ),
+                              padding: EdgeInsets.fromLTRB(15, 15, 10, 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(newsModelList[index].newsHead.length>30 ? "${newsModelList[index].newsHead.substring(0,35)}..." : newsModelList[index].newsHead,
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold
+                                    ),
+                                  ),
+                                  Text(newsModelList[index].newsDes.length >35 ? "${newsModelList[index].newsDes.substring(0,42)}..." : newsModelList[index].newsDes, style: TextStyle(color: Colors.white),),
+                                ],
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 );
+                  }catch(e){print(e); return Container();}
               }),
-            )
+            ),
+            Container(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(onPressed: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=> Category(Query: "india")));
+                  },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.yellow[300], // Change to your desired color
+                      foregroundColor: Colors.black, // Text color
+                    ),
+                    child: Text("Show More"),  )
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-
-  final List items = ["hallo world", "hallo worlddd", "aaaaa", "hallo world", "hallo worlddd", "aaaaa", "hallo world", "hallo worlddd", "aaaaa"];
 }
